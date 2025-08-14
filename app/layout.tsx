@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Visaro - Where Vision Meets Structure",
-  description: "Tech consultancy lead capture for a roleplay server",
+  description: "Top tech consultancy in Los Santos",
   icons: {
     icon: [{ url: "/Visaro.png", type: "image/png" }],
     shortcut: ["/Visaro.png"],
@@ -39,3 +39,4 @@ export default function RootLayout({
     </html>
   );
 }
+
