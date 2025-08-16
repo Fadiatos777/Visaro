@@ -5,6 +5,8 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { MapPin, Clock, Briefcase, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import RevealCard from "../components/RevealCard";
+import CardsRow from "../components/CardsRow";
 
 interface Career {
   id: string;
@@ -123,11 +125,10 @@ export default function Careers() {
 
         {/* Open Positions */}
         <section className="py-20 px-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-bold mb-12 text-center" style={{ color: "#E7E7E7" }}>
               Open Positions
             </h2>
-            
             {careers.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-xl mb-6" style={{ color: "#8C8D8D" }}>
@@ -142,87 +143,30 @@ export default function Careers() {
                 </a>
               </div>
             ) : (
-              <div className="space-y-6">
+              <CardsRow count={careers.length}>
                 {careers.map((job) => (
-                  <div 
+                  <RevealCard
                     key={job.id}
-                    className="border rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02]"
-                    style={{ 
-                      backgroundColor: "#0C0D0D", 
-                      borderColor: "#1A1B1B"
-                    }}
+                    title={job.title}
+                    subtitle={`${job.department} • ${job.location} • ${job.type}`}
+                    isOpen={expandedJob === job.id}
+                    onToggle={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
                   >
-                    <div 
-                      className="p-6 cursor-pointer"
-                      onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-semibold mb-2" style={{ color: "#E7E7E7" }}>
-                            {job.title}
-                          </h3>
-                          
-                          <div className="flex flex-wrap gap-4 text-sm" style={{ color: "#8C8D8D" }}>
-                            <div className="flex items-center gap-1">
-                              <Briefcase size={16} />
-                              {job.department}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin size={16} />
-                              {job.location}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock size={16} />
-                              {job.type}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="ml-4">
-                          {expandedJob === job.id ? (
-                            <ChevronUp size={24} style={{ color: "#509887" }} />
-                          ) : (
-                            <ChevronDown size={24} style={{ color: "#509887" }} />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {expandedJob === job.id && (
-                      <div className="px-6 pb-6 border-t" style={{ borderColor: "#1A1B1B" }}>
-                        <div className="pt-6">
-                          <h4 className="text-lg font-semibold mb-3" style={{ color: "#E7E7E7" }}>
-                            Description
-                          </h4>
-                          <p className="mb-6 leading-relaxed" style={{ color: "#8C8D8D" }}>
-                            {job.description}
-                          </p>
-                          
-                          <h4 className="text-lg font-semibold mb-3" style={{ color: "#E7E7E7" }}>
-                            Requirements
-                          </h4>
-                          <ul className="space-y-2 mb-6">
-                            {job.requirements.map((req, index) => (
-                              <li key={index} className="flex items-start gap-2" style={{ color: "#8C8D8D" }}>
-                                <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#509887" }}></span>
-                                {req}
-                              </li>
-                            ))}
-                          </ul>
-                          
-                          <a 
-                            href="/contact"
-                            className="inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
-                            style={{ backgroundColor: "#509887", color: "#090A0A" }}
-                          >
-                            Apply Now
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    <h4 className="text-lg font-semibold mb-2" style={{ color: "#E7E7E7" }}>Description</h4>
+                    <p className="mb-4">{job.description}</p>
+                    <h4 className="text-lg font-semibold mb-2" style={{ color: "#E7E7E7" }}>Requirements</h4>
+                    <ul className="space-y-2 mb-4">
+                      {job.requirements.map((req, index) => (
+                        <li key={index} className="flex items-start gap-2" style={{ color: "#8C8D8D" }}>
+                          <span className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#509887" }}></span>
+                          {req}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href="/contact" className="inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:scale-105" style={{ backgroundColor: "#509887", color: "#090A0A" }}>Apply Now</a>
+                  </RevealCard>
                 ))}
-              </div>
+              </CardsRow>
             )}
           </div>
         </section>

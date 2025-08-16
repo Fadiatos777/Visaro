@@ -6,6 +6,8 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { ExternalLink } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import RevealCard from "../components/RevealCard";
+import CardsRow from "../components/CardsRow";
 
 interface PortfolioItem {
   id: string;
@@ -22,6 +24,7 @@ export default function Portfolio() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPortfolio() {
@@ -118,77 +121,32 @@ export default function Portfolio() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <CardsRow count={filteredItems.length}>
                 {filteredItems.map((item) => (
-                  <div 
+                  <RevealCard
                     key={item.id}
-                    className="group rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-105"
-                    style={{ 
-                      backgroundColor: "#0C0D0D", 
-                      borderColor: "#1A1B1B"
-                    }}
+                    imageUrl={item.image_url || undefined}
+                    title={item.title}
+                    subtitle={item.category}
+                    isOpen={openId === item.id}
+                    onToggle={() => setOpenId(openId === item.id ? null : item.id)}
                   >
-                    {item.image_url ? (
-                      <div className="aspect-video bg-gray-800 overflow-hidden">
-                        <Image 
-                          src={item.image_url} 
-                          alt={item.title}
-                          width={400}
-                          height={225}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div 
-                        className="aspect-video flex items-center justify-center"
-                        style={{ backgroundColor: "#1A1B1B" }}
-                      >
-                        <span className="text-4xl font-bold" style={{ color: "#509887" }}>
-                          {item.title.charAt(0)}
+                    <p className="mb-4">{item.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {item.technologies.map((tech, i) => (
+                        <span key={i} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: "#1A1B1B", color: "#8C8D8D" }}>
+                          {tech}
                         </span>
-                      </div>
-                    )}
-                    
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: "#1A1B1B", color: "#509887" }}>
-                          {item.category}
-                        </span>
-                        {item.project_url && (
-                          <a 
-                            href={item.project_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-white transition-colors"
-                          >
-                            <ExternalLink size={18} />
-                          </a>
-                        )}
-                      </div>
-                      
-                      <h3 className="text-xl font-semibold mb-3" style={{ color: "#E7E7E7" }}>
-                        {item.title}
-                      </h3>
-                      
-                      <p className="mb-4 leading-relaxed" style={{ color: "#8C8D8D" }}>
-                        {item.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {item.technologies.map((tech, i) => (
-                          <span 
-                            key={i}
-                            className="px-3 py-1 rounded-full text-xs"
-                            style={{ backgroundColor: "#1A1B1B", color: "#8C8D8D" }}
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
+                      ))}
                     </div>
-                  </div>
+                    {item.project_url && (
+                      <a href={item.project_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-4 text-sm" style={{ color: "#509887" }}>
+                        <ExternalLink size={16} /> Visit project
+                      </a>
+                    )}
+                  </RevealCard>
                 ))}
-              </div>
+              </CardsRow>
             )}
           </div>
         </section>

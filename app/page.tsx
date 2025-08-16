@@ -7,6 +7,8 @@ import { ArrowRight, Code, Smartphone, Palette, HeadphonesIcon, Star, Users, Awa
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import { supabase } from "../lib/supabase";
+import RevealCard from "./components/RevealCard";
+import CardsRow from "./components/CardsRow";
 
 interface Client {
   id: string;
@@ -195,52 +197,27 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <CardsRow count={portfolioItems.length}>
                 {portfolioItems.map((item) => (
-                  <div 
+                  <RevealCard
                     key={item.id}
-                    className="group rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-105"
-                    style={{ 
-                      backgroundColor: "#0C0D0D", 
-                      borderColor: "#1A1B1B"
-                    }}
+                    imageUrl={item.image_url || undefined}
+                    title={item.title}
+                    subtitle={item.category}
+                    isOpen={false}
+                    onToggle={() => {}}
                   >
-                    {item.image_url && (
-                      <div className="aspect-video bg-gray-800 overflow-hidden">
-                        <Image 
-                          src={item.image_url} 
-                          alt={item.title}
-                          width={400}
-                          height={225}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <div className="text-sm mb-2" style={{ color: "#509887" }}>
-                        {item.category}
-                      </div>
-                      <h3 className="text-xl font-semibold mb-3" style={{ color: "#E7E7E7" }}>
-                        {item.title}
-                      </h3>
-                      <p className="mb-4" style={{ color: "#8C8D8D" }}>
-                        {item.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {item.technologies.map((tech, i) => (
-                          <span 
-                            key={i}
-                            className="px-3 py-1 rounded-full text-xs"
-                            style={{ backgroundColor: "#1A1B1B", color: "#8C8D8D" }}
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
+                    <p className="mb-4">{item.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {item.technologies.map((tech, i) => (
+                        <span key={i} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: "#1A1B1B", color: "#8C8D8D" }}>
+                          {tech}
+                        </span>
+                      ))}
                     </div>
-                  </div>
+                  </RevealCard>
                 ))}
-              </div>
+              </CardsRow>
               
               <div className="text-center mt-12">
                 <Link 
@@ -269,32 +246,17 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <CardsRow count={clients.length}>
                 {clients.map((client) => (
-                  <div 
+                  <RevealCard
                     key={client.id}
-                    className="flex items-center justify-center p-6 rounded-xl border transition-all duration-300 hover:scale-105"
-                    style={{ 
-                      backgroundColor: "#0C0D0D", 
-                      borderColor: "#1A1B1B"
-                    }}
-                  >
-                    {client.logo_url ? (
-                      <Image 
-                        src={client.logo_url} 
-                        alt={client.name}
-                        width={120}
-                        height={60}
-                        className="max-w-full h-auto opacity-70 hover:opacity-100 transition-opacity"
-                      />
-                    ) : (
-                      <span className="text-lg font-semibold" style={{ color: "#8C8D8D" }}>
-                        {client.name}
-                      </span>
-                    )}
-                  </div>
+                    imageUrl={client.logo_url || undefined}
+                    title={client.name}
+                    isOpen={false}
+                    onToggle={() => {}}
+                  />
                 ))}
-              </div>
+              </CardsRow>
             </div>
           </section>
         )}

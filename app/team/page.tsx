@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { supabase } from "../../lib/supabase";
+import RevealCard from "../components/RevealCard";
+import CardsRow from "../components/CardsRow";
 
 interface TeamMember {
   id: string;
@@ -18,6 +20,7 @@ interface TeamMember {
 export default function Team() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTeamMembers() {
@@ -80,51 +83,20 @@ export default function Team() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <CardsRow count={teamMembers.length}>
                 {teamMembers.map((member) => (
-                  <div 
+                  <RevealCard
                     key={member.id}
-                    className="group p-8 rounded-2xl border transition-all duration-300 hover:scale-105"
-                    style={{ 
-                      backgroundColor: "#0C0D0D", 
-                      borderColor: "#1A1B1B"
-                    }}
+                    imageUrl={member.image_url || undefined}
+                    title={member.name}
+                    subtitle={member.role}
+                    isOpen={openId === member.id}
+                    onToggle={() => setOpenId(openId === member.id ? null : member.id)}
                   >
-                    <div className="text-center">
-                      {member.image_url ? (
-                        <div className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
-                          <Image 
-                            src={member.image_url} 
-                            alt={member.name}
-                            width={128}
-                            height={128}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </div>
-                      ) : (
-                        <div 
-                          className="w-32 h-32 mx-auto mb-6 rounded-full flex items-center justify-center text-4xl font-bold"
-                          style={{ backgroundColor: "#509887", color: "#090A0A" }}
-                        >
-                          {member.name.charAt(0)}
-                        </div>
-                      )}
-                      
-                      <h3 className="text-2xl font-semibold mb-2" style={{ color: "#E7E7E7" }}>
-                        {member.name}
-                      </h3>
-                      
-                      <p className="text-lg mb-4" style={{ color: "#509887" }}>
-                        {member.role}
-                      </p>
-                      
-                      <p className="leading-relaxed" style={{ color: "#8C8D8D" }}>
-                        {member.bio}
-                      </p>
-                    </div>
-                  </div>
+                    {member.bio}
+                  </RevealCard>
                 ))}
-              </div>
+              </CardsRow>
             )}
           </div>
         </section>

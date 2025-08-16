@@ -139,24 +139,26 @@ export default function About() {
             
             <div className="space-y-8 text-lg leading-relaxed" style={{ color: "#8C8D8D" }}>
               <p>
-                Visaro was born from a vision to bridge the gap between ambitious ideas and 
-                exceptional execution. In a city as dynamic as Los Santos, businesses need 
-                digital partners who understand both the technical landscape and the unique 
-                challenges of the local market.
+              Visaro was born from the vision of Marvin Clayton, our CEO & Managing Director, 
+              who set out to bridge the gap between ambitious ideas and exceptional execution. 
+              With a keen eye for innovation and a deep understanding of how technology can 
+              transform businesses, Marvin established Visaro in the heart of Los Santos to be 
+              more than just a consultancy—it was to be a trusted digital partner.
               </p>
               
               <p>
-                What started as a small team of passionate developers has grown into Los Santos' 
-                most trusted tech consultancy. We've had the privilege of working with startups 
-                taking their first digital steps, established businesses modernizing their operations, 
-                and everything in between.
+              What began as a small team under Marvin’s leadership quickly grew into Los Santos' 
+              most reliable tech consultancy. Guided by his belief  in blending creativity with 
+              technical excellence, we’ve had the privilege of working 
+              with startups taking their first digital steps, established enterprises 
+              modernizing their operations, and everything in between.
               </p>
               
               <p>
-                Today, we continue to push boundaries, embrace new technologies, and most importantly, 
-                deliver results that matter. Every project is an opportunity to create something 
-                extraordinary, and we approach each one with the same enthusiasm and dedication 
-                that founded our company.
+              Today, we continue to push boundaries, embrace new technologies, and 
+              most importantly, deliver results that matter. Every project is an opportunity to 
+              create something extraordinary, and we approach each one with the same enthusiasm 
+              and dedication that Marvin envisioned from day one.
               </p>
             </div>
           </div>

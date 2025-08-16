@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 export default function BackgroundFX() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrame = useRef<number | null>(null);
+  const lastCycleRef = useRef<number>(-1);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia(
@@ -32,7 +33,81 @@ export default function BackgroundFX() {
 
     const teal = "#509887";
 
+    // Offscreen blueprint canvas (regenerated per pulse cycle)
+    const bp = document.createElement("canvas");
+    const bpCtx = bp.getContext("2d", { alpha: true })!;
+    const sizeBlueprint = () => {
+      const { innerWidth: w, innerHeight: h } = window;
+      bp.width = Math.floor(w * DPR);
+      bp.height = Math.floor(h * DPR);
+      bpCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    };
+    sizeBlueprint();
+
     const start = performance.now();
+
+    // Seedable PRNG
+    const mulberry32 = (seed: number) => {
+      let t = seed >>> 0;
+      return () => {
+        t |= 0; t = (t + 0x6D2B79F5) | 0;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    };
+
+    const drawBlueprint = (seed: number) => {
+      const { innerWidth: w, innerHeight: h } = window;
+      bpCtx.clearRect(0, 0, w, h);
+      const rnd = mulberry32(seed);
+
+      // Grid
+      bpCtx.save();
+      bpCtx.strokeStyle = "rgba(80,152,135,0.08)";
+      bpCtx.lineWidth = 1;
+      const spacing = 48;
+      for (let x = spacing / 2; x < w; x += spacing) { bpCtx.beginPath(); bpCtx.moveTo(x, 0); bpCtx.lineTo(x, h); bpCtx.stroke(); }
+      for (let y = spacing / 2; y < h; y += spacing) { bpCtx.beginPath(); bpCtx.moveTo(0, y); bpCtx.lineTo(w, y); bpCtx.stroke(); }
+      bpCtx.restore();
+
+      // Nodes
+      const nodeCount = 6 + Math.floor(rnd() * 6);
+      const nodes: Array<{x:number,y:number}> = [];
+      for (let i = 0; i < nodeCount; i++) nodes.push({ x: w * (0.15 + rnd() * 0.7), y: h * (0.2 + rnd() * 0.6) });
+
+      // Connections
+      bpCtx.globalCompositeOperation = "lighter";
+      bpCtx.strokeStyle = "rgba(80,152,135,0.18)";
+      bpCtx.lineWidth = 2;
+      bpCtx.setLineDash([8, 6]);
+      for (let i = 0; i < nodes.length - 1; i++) {
+        const a = nodes[i];
+        const b = nodes[Math.floor(rnd() * nodes.length)];
+        const mx = (a.x + b.x) / 2 + (rnd() - 0.5) * 60;
+        const my = (a.y + b.y) / 2 + (rnd() - 0.5) * 60;
+        bpCtx.beginPath(); bpCtx.moveTo(a.x, a.y); bpCtx.quadraticCurveTo(mx, my, b.x, b.y); bpCtx.stroke();
+      }
+      bpCtx.setLineDash([]);
+
+      // Node circles
+      for (const n of nodes) {
+        const r = 6 + rnd() * 10;
+        const grad = bpCtx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 2);
+        grad.addColorStop(0, "rgba(80,152,135,0.5)"); grad.addColorStop(1, "rgba(80,152,135,0)");
+        bpCtx.fillStyle = grad; bpCtx.beginPath(); bpCtx.arc(n.x, n.y, r * 2, 0, Math.PI * 2); bpCtx.fill();
+        bpCtx.strokeStyle = "rgba(80,152,135,0.6)"; bpCtx.lineWidth = 1.5; bpCtx.beginPath(); bpCtx.arc(n.x, n.y, r, 0, Math.PI * 2); bpCtx.stroke();
+      }
+
+      // Arcs
+      const arcCount = 3 + Math.floor(rnd() * 4);
+      bpCtx.strokeStyle = "rgba(80,152,135,0.15)";
+      for (let i = 0; i < arcCount; i++) {
+        const cx = w * rnd(); const cy = h * rnd(); const rad = 80 + rnd() * Math.min(w, h) * 0.25;
+        const a0 = rnd() * Math.PI * 2; const a1 = a0 + (Math.PI * 0.3 + rnd() * Math.PI * 0.5);
+        bpCtx.beginPath(); bpCtx.arc(cx, cy, rad, a0, a1); bpCtx.stroke();
+      }
+    };
     const draw = () => {
       const now = performance.now();
       const elapsed = now - start;
@@ -56,6 +131,11 @@ export default function BackgroundFX() {
       baseGrad.addColorStop(1.0, "rgba(80,152,135,0.34)");
       ctx.fillStyle = baseGrad;
       ctx.fillRect(0, 0, w, h);
+
+      // Blueprint: regenerate per pulse cycle
+      const pulsePeriod = 6000;
+      const cycle = Math.floor(elapsed / pulsePeriod);
+      if (cycle !== lastCycleRef.current) { lastCycleRef.current = cycle; drawBlueprint(cycle + 1337); }
 
       // Water-drop style ripples from center outward.
       // Use two staggered ripples so there is no visible reset point.
@@ -86,6 +166,12 @@ export default function BackgroundFX() {
       }
 
       ctx.globalCompositeOperation = prevComp;
+
+      // Fade blueprint with pulse
+      const within = (elapsed % 6000) / 6000;
+      const pulseEase = Math.sin(within * Math.PI);
+      const bpAlpha = 0.18 * pulseEase;
+      if (bpAlpha > 0.001) { ctx.save(); ctx.globalAlpha = bpAlpha; ctx.globalCompositeOperation = "lighter"; ctx.drawImage(bp, 0, 0, w, h); ctx.restore(); }
 
       animationFrame.current = requestAnimationFrame(draw);
     };
