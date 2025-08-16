@@ -1,204 +1,326 @@
 "use client";
+
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { ArrowRight, Code, Smartphone, Palette, HeadphonesIcon, Star, Users, Award } from "lucide-react";
+import Navigation from "./components/Navigation";
+import Footer from "./components/Footer";
+import { supabase } from "../lib/supabase";
+
+interface Client {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  website_url: string | null;
+  is_featured: boolean;
+}
+
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string | null;
+  category: string;
+  technologies: string[];
+  is_featured: boolean;
+}
 
 export default function Home() {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    phone: "",
-    discord: "",
-    gtaUsername: "",
-    notes: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState<null | { ok: boolean; message: string }>(null);
-  const [fieldError, setFieldError] = useState<{ phone?: string }>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    setStatus(null);
-    setFieldError({});
-    
-    const phoneDigits = formData.phone.replace(/\D/g, "");
-    const isPhoneValid = /^\d{3,}$/.test(phoneDigits);
+  useEffect(() => {
+    async function fetchData() {
+      const [clientsRes, portfolioRes] = await Promise.all([
+        supabase.from('clients').select('*').eq('is_featured', true).order('order_index'),
+        supabase.from('portfolio_items').select('*').eq('is_featured', true).order('order_index').limit(3)
+      ]);
+      
+      if (clientsRes.data) setClients(clientsRes.data);
+      if (portfolioRes.data) setPortfolioItems(portfolioRes.data);
+    }
+    fetchData();
+  }, []);
 
-    if (!isPhoneValid) {
-      setSubmitting(false);
-      setFieldError({ phone: "Phone must contain digits only (minimum 3 digits)." });
-      setStatus({ ok: false, message: "Please fix the highlighted fields." });
-      return;
+  const services = [
+    {
+      icon: Code,
+      title: "Web Development",
+      description: "Custom websites and web applications built with modern technologies, optimized for performance and user experience."
+    },
+    {
+      icon: Smartphone,
+      title: "Mobile-First Design",
+      description: "Responsive designs that work flawlessly across all devices, ensuring your audience can engage anywhere."
+    },
+    {
+      icon: Palette,
+      title: "Branding Packages",
+      description: "Complete brand identity solutions including logos, color schemes, and brand guidelines that make you stand out."
+    },
+    {
+      icon: HeadphonesIcon,
+      title: "Ongoing Support",
+      description: "Dedicated support and maintenance to keep your digital presence running smoothly and up-to-date."
     }
-    try {
-      const res = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          phone: phoneDigits,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Failed to submit");
-      setStatus({ ok: true, message: "Submitted! We'll be in touch." });
-      setSubmitted(true);
-      setFormData({ fullName: "", phone: "", discord: "", gtaUsername: "", notes: "" });
-    } catch (err: any) {
-      setStatus({ ok: false, message: err.message || "Something went wrong" });
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  ];
+
+  const stats = [
+    { icon: Users, value: "50+", label: "Happy Clients" },
+    { icon: Code, value: "100+", label: "Projects Delivered" },
+    { icon: Award, value: "99%", label: "Client Satisfaction" },
+    { icon: Star, value: "24/7", label: "Support Available" }
+  ];
 
   return (
-    <div className="font-sans min-h-screen flex items-center justify-center p-6">
-      <main className="w-full max-w-2xl">
-		<div className="flex flex-col items-center gap-6 mb-8">
-			<Image src="/Visaro.png" alt="Visaro logo" width={96} height={96} priority style={{
-				transform: submitted ? "translateY(120px) scale(1.65)" : "translateY(0) scale(1)",
-				transition: "transform 800ms ease, filter 800ms ease",
-				filter: submitted ? "drop-shadow(0 8px 40px rgba(80,152,135,0.25))" : "none",
-			}} />
-			<h1 className="text-center text-3xl sm:text-4xl font-semibold" style={{ color: "#8C8D8D", transform: submitted ? "translateY(110px) scale(1.1)" : "translateY(0) scale(1)", transition: "transform 800ms ease" }}>
-            Shape your idea into reality now!
-          </h1>
-          <p className="text-center text-sm sm:text-base max-w-xl" style={{ color: "#8C8D8D", opacity: submitted ? 0 : 1, transition: "opacity 500ms ease" }}>
-            Where vision meets structure. Tell us a bit about you and we’ll reach out.
-          </p>
-        </div>
-
-		{/* Thank you message positioned with the same spacing as the logo→slogan gap */}
-		<div aria-live="polite" className="flex justify-center mt-6">
-			<p className="text-center text-lg sm:text-xl font-semibold"
-				style={{
-					color: "#8C8D8D",
-					lineHeight: 1.6,
-					opacity: submitted ? 1 : 0,
-					transform: submitted ? "translateY(110px)" : "translateY(0)",
-					transition: "opacity 600ms ease, transform 800ms ease",
-				}}
-			>
-				Thank you for choosing us, we'll get back to you as soon as possible!
-			</p>
-		</div>
-
-		<div className="relative" style={{ minHeight: 320 }}>
-          <form onSubmit={handleSubmit} className="rounded-2xl p-6 sm:p-8" style={{ backgroundColor: "#0C0D0D", border: "1px solid #1A1B1B", opacity: submitted ? 0 : 1, transform: submitted ? "translateY(12px)" : "translateY(0)", transition: "opacity 500ms ease, transform 500ms ease" }}>
-            <div className="grid grid-cols-1 gap-5">
-            <div>
-              <label className="block text-sm mb-2" style={{ color: "#8C8D8D" }}>Full Name</label>
-              <input
-                required
-                type="text"
-                value={formData.fullName}
-                placeholder="John Doe"
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="w-full rounded-lg px-4 py-3 bg-black/40 outline-none focus:ring-2"
-                style={{ color: "#E7E7E7", border: "1px solid #1F2020", caretColor: "#509887", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2" style={{ color: "#8C8D8D" }}>Phone Number</label>
-              <input
-                required
-                type="tel"
-                inputMode="numeric"
-                value={formData.phone}
-                placeholder="12345678"
-                onChange={(e) => {
-                  const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
-                  setFormData({ ...formData, phone: digitsOnly });
-                }}
-                onKeyDown={(e) => {
-                  const allowed = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Home", "End", "Tab"];
-                  if (allowed.includes(e.key)) return;
-                  if (!/^[0-9]$/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                onPaste={(e) => {
-                  e.preventDefault();
-                  const text = (e.clipboardData || (window as any).clipboardData).getData("text");
-                  const digitsOnly = String(text || "").replace(/[^0-9]/g, "");
-                  setFormData((p) => ({ ...p, phone: p.phone + digitsOnly }));
-                }}
-                className="w-full rounded-lg px-4 py-3 bg-black/40 outline-none focus:ring-2"
-                style={{ color: "#E7E7E7", border: `1px solid ${fieldError.phone ? "#991B1B" : "#1F2020"}`, caretColor: "#509887" }}
-              />
-              {fieldError.phone && (
-                <p className="mt-2 text-sm" style={{ color: "#FECACA" }}>{fieldError.phone}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2" style={{ color: "#8C8D8D" }}>(( Discord ))</label>
-              <input
-                required
-                type="text"
-                placeholder="username"
-                value={formData.discord}
-                onChange={(e) => setFormData({ ...formData, discord: e.target.value })}
-                className="w-full rounded-lg px-4 py-3 bg-black/40 outline-none focus:ring-2"
-                style={{ color: "#E7E7E7", border: "1px solid #1F2020", caretColor: "#509887" }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2" style={{ color: "#8C8D8D" }}>(( GTA:W Username ))</label>
-              <input
-                required
-                type="text"
-                placeholder="Ex: Panda"
-                value={formData.gtaUsername}
-                onChange={(e) => setFormData({ ...formData, gtaUsername: e.target.value })}
-                className="w-full rounded-lg px-4 py-3 bg-black/40 outline-none focus:ring-2"
-                style={{ color: "#E7E7E7", border: "1px solid #1F2020", caretColor: "#509887" }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2" style={{ color: "#8C8D8D" }}>Notes</label>
-              <textarea
-                required
-                rows={5}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full rounded-lg px-4 py-3 bg-black/40 outline-none focus:ring-2 resize-y"
-                style={{ color: "#E7E7E7", border: "1px solid #1F2020", caretColor: "#509887" }}
-              />
-            </div>
-        
-            {status && !submitted && (
-              <div
-                className={`text-sm px-4 py-3 rounded-lg ${status.ok ? "" : ""}`}
-                style={{
-                  color: status.ok ? "#D1FAE5" : "#FECACA",
-                  backgroundColor: status.ok ? "#064E3B" : "#7F1D1D",
-                  border: `1px solid ${status.ok ? "#065F46" : "#991B1B"}`,
-                }}
-              >
-                {status.message}
+    <>
+      <Navigation />
+      
+      <div className="font-sans min-h-screen">
+        {/* Hero Section */}
+        <section className="pt-24 pb-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-4xl mx-auto">
+              <div className="flex justify-center mb-8">
+                <Image 
+                  src="/Visaro.png" 
+                  alt="Visaro logo" 
+                  width={120} 
+                  height={120} 
+                  priority 
+                  className="drop-shadow-lg"
+                />
               </div>
-            )}
-        
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-2 inline-flex items-center justify-center rounded-lg px-5 py-3 font-medium transition-colors"
-              style={{
-                backgroundColor: submitting ? "#396F62" : "#509887",
-                color: "#090A0A",
-                opacity: submitting ? 0.9 : 1,
-              }}
+              
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+                <span style={{ color: "#E7E7E7" }}>Where Vision</span>
+                <br />
+                <span style={{ color: "#509887" }}>Meets Structure</span>
+              </h1>
+              
+              <p className="text-xl sm:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed" style={{ color: "#8C8D8D" }}>
+                Los Santos' premier tech consultancy. We transform ambitious ideas into 
+                exceptional digital experiences that drive real business results.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link 
+                  href="/contact"
+                  className="inline-flex items-center justify-center px-8 py-4 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
+                  style={{ backgroundColor: "#509887", color: "#090A0A" }}
+                >
+                  Start Your Project
+                  <ArrowRight className="ml-2" size={20} />
+                </Link>
+                <Link 
+                  href="/portfolio"
+                  className="inline-flex items-center justify-center px-8 py-4 rounded-lg font-semibold border transition-all duration-200 hover:bg-white/5"
+                  style={{ borderColor: "#509887", color: "#509887" }}
+                >
+                  View Our Work
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-16 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="flex justify-center mb-4">
+                    <stat.icon size={32} style={{ color: "#509887" }} />
+                  </div>
+                  <div className="text-3xl font-bold mb-2" style={{ color: "#E7E7E7" }}>
+                    {stat.value}
+                  </div>
+                  <div className="text-sm" style={{ color: "#8C8D8D" }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Services Section */}
+        <section className="py-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{ color: "#E7E7E7" }}>
+                Our Services
+              </h2>
+              <p className="text-xl max-w-3xl mx-auto" style={{ color: "#8C8D8D" }}>
+                Comprehensive digital solutions tailored for the Los Santos business ecosystem
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {services.map((service, index) => (
+                <div 
+                  key={index}
+                  className="p-8 rounded-2xl border transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  style={{ 
+                    backgroundColor: "#0C0D0D", 
+                    borderColor: "#1A1B1B",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+                  }}
+                >
+                  <service.icon size={48} style={{ color: "#509887" }} className="mb-6" />
+                  <h3 className="text-2xl font-semibold mb-4" style={{ color: "#E7E7E7" }}>
+                    {service.title}
+                  </h3>
+                  <p style={{ color: "#8C8D8D" }} className="leading-relaxed">
+                    {service.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Portfolio */}
+        {portfolioItems.length > 0 && (
+          <section className="py-20 px-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{ color: "#E7E7E7" }}>
+                  Featured Work
+                </h2>
+                <p className="text-xl max-w-3xl mx-auto" style={{ color: "#8C8D8D" }}>
+                  Recent projects that showcase our expertise and commitment to excellence
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {portfolioItems.map((item) => (
+                  <div 
+                    key={item.id}
+                    className="group rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-105"
+                    style={{ 
+                      backgroundColor: "#0C0D0D", 
+                      borderColor: "#1A1B1B"
+                    }}
+                  >
+                    {item.image_url && (
+                      <div className="aspect-video bg-gray-800 overflow-hidden">
+                        <Image 
+                          src={item.image_url} 
+                          alt={item.title}
+                          width={400}
+                          height={225}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <div className="text-sm mb-2" style={{ color: "#509887" }}>
+                        {item.category}
+                      </div>
+                      <h3 className="text-xl font-semibold mb-3" style={{ color: "#E7E7E7" }}>
+                        {item.title}
+                      </h3>
+                      <p className="mb-4" style={{ color: "#8C8D8D" }}>
+                        {item.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {item.technologies.map((tech, i) => (
+                          <span 
+                            key={i}
+                            className="px-3 py-1 rounded-full text-xs"
+                            style={{ backgroundColor: "#1A1B1B", color: "#8C8D8D" }}
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="text-center mt-12">
+                <Link 
+                  href="/portfolio"
+                  className="inline-flex items-center px-8 py-4 rounded-lg font-semibold border transition-all duration-200 hover:bg-white/5"
+                  style={{ borderColor: "#509887", color: "#509887" }}
+                >
+                  View All Projects
+                  <ArrowRight className="ml-2" size={20} />
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Clients Section */}
+        {clients.length > 0 && (
+          <section className="py-20 px-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{ color: "#E7E7E7" }}>
+                  Trusted Partners
+                </h2>
+                <p className="text-xl max-w-3xl mx-auto" style={{ color: "#8C8D8D" }}>
+                  Proud to work with leading businesses across Los Santos
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                {clients.map((client) => (
+                  <div 
+                    key={client.id}
+                    className="flex items-center justify-center p-6 rounded-xl border transition-all duration-300 hover:scale-105"
+                    style={{ 
+                      backgroundColor: "#0C0D0D", 
+                      borderColor: "#1A1B1B"
+                    }}
+                  >
+                    {client.logo_url ? (
+                      <Image 
+                        src={client.logo_url} 
+                        alt={client.name}
+                        width={120}
+                        height={60}
+                        className="max-w-full h-auto opacity-70 hover:opacity-100 transition-opacity"
+                      />
+                    ) : (
+                      <span className="text-lg font-semibold" style={{ color: "#8C8D8D" }}>
+                        {client.name}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* CTA Section */}
+        <section className="py-20 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{ color: "#E7E7E7" }}>
+              Ready to Build Something Amazing?
+            </h2>
+            <p className="text-xl mb-8" style={{ color: "#8C8D8D" }}>
+              Let's discuss your project and turn your vision into reality
+            </p>
+            <Link 
+              href="/contact"
+              className="inline-flex items-center justify-center px-10 py-5 rounded-lg font-semibold text-lg transition-all duration-200 hover:scale-105"
+              style={{ backgroundColor: "#509887", color: "#090A0A" }}
             >
-              {submitting ? "Submitting..." : "Submit"}
-			</button>
-			</div>
-		  </form>
-        </div>
-      </main>
-    </div>
+              Get Started Today
+              <ArrowRight className="ml-3" size={24} />
+            </Link>
+          </div>
+        </section>
+      </div>
+      
+      <Footer />
+    </>
   );
 }

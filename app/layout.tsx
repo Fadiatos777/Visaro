@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Visaro - Where Vision Meets Structure",
-  description: "Top tech consultancy in Los Santos",
+  description: "Los Santos' premier tech consultancy. We transform ambitious ideas into exceptional digital experiences.",
   icons: {
     icon: [{ url: "/Visaro.png", type: "image/png" }],
     shortcut: ["/Visaro.png"],
