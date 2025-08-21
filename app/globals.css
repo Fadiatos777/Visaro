@@ -82,3 +82,27 @@ html, body {
   z-index: 1;
 }
 
+/* Page transition overlay */
+.visaro-fade-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--background); /* match page background */
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10000; /* above nav (z-50) and custom cursor (9999) */
+  transition: opacity 260ms ease;
+}
+.visaro-fade-overlay.is-visible {
+  pointer-events: auto; /* block clicks during transition */
+}
+.visaro-fade-overlay.is-opaque {
+  opacity: 1;
+  transition: opacity 140ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visaro-fade-overlay {
+    transition: none !important;
+  }
+}
+

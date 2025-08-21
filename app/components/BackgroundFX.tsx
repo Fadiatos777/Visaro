@@ -10,6 +10,8 @@ export default function BackgroundFX() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrame = useRef<number | null>(null);
   const lastCycleRef = useRef<number>(-1);
+  // Click-driven burst effects
+  const clickBurstsRef = useRef<Array<{ x: number; y: number; t0: number; seed: number }>>([]);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia(
@@ -45,6 +47,17 @@ export default function BackgroundFX() {
     sizeBlueprint();
 
     const start = performance.now();
+
+    // Click / press bursts (respect reduced motion)
+    const onPointerDown = (e: PointerEvent) => {
+      if (prefersReduced) return;
+      clickBurstsRef.current.push({ x: e.clientX, y: e.clientY, t0: performance.now(), seed: Math.floor(Math.random() * 1e9) });
+      // Limit retained bursts for perf
+      if (clickBurstsRef.current.length > 12) {
+        clickBurstsRef.current.splice(0, clickBurstsRef.current.length - 12);
+      }
+    };
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
 
     // Seedable PRNG
     const mulberry32 = (seed: number) => {
@@ -167,6 +180,54 @@ export default function BackgroundFX() {
 
       ctx.globalCompositeOperation = prevComp;
 
+      // Click-driven burst effects (rings + sparkles)
+      if (clickBurstsRef.current.length) {
+        const DURATION = 1100; // ms per burst lifetime
+        const particleCount = 26;
+        const ringThickness = Math.min(w, h) * 0.08;
+        const prev = ctx.globalCompositeOperation;
+        ctx.globalCompositeOperation = "lighter";
+
+        const nextBursts: typeof clickBurstsRef.current = [];
+        for (const b of clickBurstsRef.current) {
+          const t = now - b.t0;
+          if (t < 0 || t > DURATION) continue;
+          nextBursts.push(b);
+          const p = t / DURATION; // 0..1
+
+          // Expanding ring
+          const radius = p * Math.max(w, h) * 0.4;
+          const inner = Math.max(0, radius - ringThickness);
+          const outer = radius + ringThickness;
+          const ring = ctx.createRadialGradient(b.x, b.y, inner, b.x, b.y, outer);
+          const strength = Math.sin(Math.PI * Math.min(1, Math.max(0, p))) * (1 - p * 0.5);
+          ring.addColorStop(0.0, "rgba(80,152,135,0)");
+          ring.addColorStop(0.5, `rgba(80,152,135,${(0.55 * strength).toFixed(3)})`);
+          ring.addColorStop(1.0, "rgba(80,152,135,0)");
+          ctx.fillStyle = ring;
+          ctx.fillRect(0, 0, w, h);
+
+          // Sparkle particles
+          const rnd = mulberry32(b.seed);
+          for (let i = 0; i < particleCount; i++) {
+            const angle = rnd() * Math.PI * 2;
+            const speed = 0.08 + rnd() * 0.45; // normalized radial speed
+            const drift = (rnd() - 0.5) * 0.8;
+            const dist = Math.pow(p, 0.72) * Math.max(w, h) * speed;
+            const x = b.x + Math.cos(angle) * dist + drift * 18;
+            const y = b.y + Math.sin(angle) * dist + drift * 18;
+            const size = 1.5 + rnd() * 2.5;
+            const alpha = (1 - p) * (0.35 + rnd() * 0.45);
+            ctx.fillStyle = `rgba(80,152,135,${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        clickBurstsRef.current = nextBursts;
+        ctx.globalCompositeOperation = prev;
+      }
+
       // Fade blueprint with pulse
       const within = (elapsed % 6000) / 6000;
       const pulseEase = Math.sin(within * Math.PI);
@@ -197,6 +258,7 @@ export default function BackgroundFX() {
     return () => {
       if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("pointerdown", onPointerDown);
     };
   }, []);
 

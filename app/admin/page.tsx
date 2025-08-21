@@ -65,6 +65,14 @@ export default function AdminPanel() {
 
   useEffect(() => {
     const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
+    const safetyTimer = setTimeout(() => {
+      // Ensure UI never gets stuck on "Checking session..."
+      if (isDebug) {
+        // eslint-disable-next-line no-console
+        console.log('[admin] safety timeout fired; unblocking UI');
+      }
+      setSessionChecked(true);
+    }, 1800);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const authed = Boolean(session?.user?.id);
@@ -88,15 +96,18 @@ export default function AdminPanel() {
         setIsAdmin(false);
       }
       setSessionChecked(true);
+      clearTimeout(safetyTimer);
     });
 
     const t0 = performance.now();
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession()
+    .then(({ data }) => {
       const session = data.session;
       const authed = Boolean(session?.user?.id);
       setIsAuthenticated(authed);
       // Unblock the UI immediately after we know auth state
       setSessionChecked(true);
+      clearTimeout(safetyTimer);
       if (isDebug) {
         // eslint-disable-next-line no-console
         console.log('[admin] getSession ms =', Math.round(performance.now() - t0));
@@ -122,10 +133,19 @@ export default function AdminPanel() {
       } else {
         setIsAdmin(false);
       }
+    })
+    .catch((err) => {
+      if (isDebug) {
+        // eslint-disable-next-line no-console
+        console.log('[admin] getSession error', err);
+      }
+      setSessionChecked(true);
+      clearTimeout(safetyTimer);
     });
 
     return () => {
       authListener.subscription.unsubscribe();
+      clearTimeout(safetyTimer);
     };
   }, []);
 
