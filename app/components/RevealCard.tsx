@@ -27,7 +27,7 @@ export default function RevealCard({ imageUrl, title, subtitle, isOpen, onToggle
 			aria-expanded={isOpen}
 			onClick={onToggle}
 			onKeyDown={handleKey}
-			className="relative group p-8 rounded-2xl border transition-all duration-300 active:scale-[0.99] focus:outline-none focus:ring focus:ring-[#509887]/40 w-full max-w-md"
+			className="relative group p-8 rounded-2xl border transition-all duration-300 active:scale-[0.99] focus:outline-none focus:ring focus:ring-[#509887]/40 w-full"
 			style={{ backgroundColor: "#0C0D0D", borderColor: isOpen ? "#2A2B2B" : "#1A1B1B" }}
 		>
 			{/* Background duplicated image with teal overlay */}

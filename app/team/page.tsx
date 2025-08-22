@@ -20,7 +20,7 @@ interface TeamMember {
 export default function Team() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchTeamMembers() {
@@ -90,8 +90,16 @@ export default function Team() {
                     imageUrl={member.image_url || undefined}
                     title={member.name}
                     subtitle={member.role}
-                    isOpen={openId === member.id}
-                    onToggle={() => setOpenId(openId === member.id ? null : member.id)}
+                    isOpen={openIds.has(member.id)}
+                    onToggle={() => {
+                      const newOpenIds = new Set(openIds);
+                      if (newOpenIds.has(member.id)) {
+                        newOpenIds.delete(member.id);
+                      } else {
+                        newOpenIds.add(member.id);
+                      }
+                      setOpenIds(newOpenIds);
+                    }}
                   >
                     {member.bio}
                   </RevealCard>
