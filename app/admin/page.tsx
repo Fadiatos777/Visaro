@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase, uploadImage } from "../../lib/supabase";
 import Navigation from "../components/Navigation";
+import ImageUpload from "../components/ImageUpload";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 
 // Expose Supabase in browser for quick diagnostics and enable lightweight timing logs
@@ -466,14 +467,23 @@ function TeamManagement({ teamMembers, onRefresh }: { teamMembers: TeamMember[],
               />
             </div>
             
-            <input
-              type="url"
-              placeholder="Image URL (optional)"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg bg-black/40 outline-none"
-              style={{ color: "#E7E7E7", border: "1px solid #1F2020" }}
-            />
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: "#E7E7E7" }}>
+                Profile Image
+              </label>
+              <ImageUpload
+                value={formData.image_url}
+                onChange={(imageUrl) => setFormData({ ...formData, image_url: imageUrl })}
+                onUpload={async (file, croppedImageUrl) => {
+                  // Convert cropped blob URL to File for upload
+                  const response = await fetch(croppedImageUrl);
+                  const blob = await response.blob();
+                  const croppedFile = new File([blob], file.name, { type: file.type });
+                  return await uploadImage(croppedFile, 'team');
+                }}
+                aspectRatio={1}
+              />
+            </div>
             
             <textarea
               required
